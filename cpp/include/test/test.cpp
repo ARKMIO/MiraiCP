@@ -36,17 +36,20 @@ public:
             ...
         参数都在param变量里，在lambda块中使用param.xxx来调用
         */
-        Event::processor.registerEvent<BotOnlineEvent>([](BotOnlineEvent e) {
+        Event::processor.registerEvent(MiraiCPEvent::EventType::BotOnlineEvent, [](json j) {
+            BotOnlineEvent e(j);
             e.botlogger.info("Bot is Online");
         });
         // 邀请事件
         // 好友申请
-        Event::processor.registerEvent<NewFriendRequestEvent>([](NewFriendRequestEvent e) {
+        Event::processor.registerEvent(MiraiCPEvent::EventType::NewFriendRequestEvent, [](json j) {
+            NewFriendRequestEvent e(j);
             e.accept();
             Friend(e.fromid, e.bot.id).sendMessage("HI");
         });
         // 邀请加群
-        Event::processor.registerEvent<GroupInviteEvent>([](GroupInviteEvent e) {
+        Event::processor.registerEvent(MiraiCPEvent::EventType::GroupInviteEvent, [](json j) {
+            GroupInviteEvent e(j);
             Logger::logger.error(to_string(e.bot.id));
             if (e.groupid != 1044565129)
                 e.accept();
@@ -57,7 +60,7 @@ public:
         });
         // 消息事件
         // 监听私聊
-        Event::processor.registerEvent<PrivateMessageEvent>([](PrivateMessageEvent e) {
+        Event::processor.registerEvent(MiraiCPEvent::EventType::PrivateMessageEvent, [](json j) {
             // unsigned long long id = e.bot.id;
             // e.botlogger.info(std::to_string(id));
             // e.message.source.quoteAndSendMsg("HI");
@@ -71,6 +74,7 @@ public:
             //     e.sender.sendMsg(a);
             // }
             // // 发送图片
+            PrivateMessageEvent e(j);
             Image tmp = e.sender.uploadImg(R"(C:\Users\19308\Desktop\a.jpg)");
             e.sender.sendMessage(tmp);
             Logger::logger.info(e.message.source->serializeToString());
@@ -80,7 +84,8 @@ public:
         });
 
         // 监听群信息
-        Event::processor.registerEvent<GroupMessageEvent>([=](GroupMessageEvent e) {
+        Event::processor.registerEvent(MiraiCPEvent::EventType::GroupMessageEvent, [=](json j) {
+            GroupMessageEvent e(j);
             Logger::logger.info(e.message.source->source);
             Logger::logger.info(e.message.toMiraiCode());
             e.message.quoteAndSendMessage("xxx" + e.message.toMiraiCode());
@@ -167,27 +172,34 @@ public:
             //     Logger::logger.info("content2: " + e.senderNextMessage().content.toString());
         });
         // 监听群临时会话
-        Event::processor.registerEvent<GroupTempMessageEvent>([](GroupTempMessageEvent e) {
+        Event::processor.registerEvent(MiraiCPEvent::EventType::GroupTempMessageEvent, [](json j) {
+            GroupTempMessageEvent e(j);
             e.sender.sendMessage("hi");
         });
         // 群事件
-        Event::processor.registerEvent<MemberJoinEvent>([](MemberJoinEvent e) {
+        Event::processor.registerEvent(MiraiCPEvent::EventType::MemberJoinEvent, [](json j) {
+            MemberJoinEvent e(j);
             e.group.sendMessage(e.group.getOwner().at(), std::to_string(e.member.id()), "加入了群聊");
         });
-        Event::processor.registerEvent<MemberLeaveEvent>([](MemberLeaveEvent e) {
+        Event::processor.registerEvent(MiraiCPEvent::EventType::MemberLeaveEvent, [](json j) {
+            MemberLeaveEvent e(j);
             e.group.sendMessage(e.group.getOwner().at(), std::to_string(e.memberid), "退出了群聊");
         });
-        Event::processor.registerEvent<TimeOutEvent>([](const TimeOutEvent &e) {
+        Event::processor.registerEvent(MiraiCPEvent::EventType::TimeOutEvent, [](json j) {
+            TimeOutEvent e(j);
             Logger::logger.info(e.msg);
         });
-        Event::processor.registerEvent<NudgeEvent>([](const NudgeEvent &e) {
+        Event::processor.registerEvent(MiraiCPEvent::EventType::NudgeEvent, [](json j) {
+            NudgeEvent e(j);
             Logger::logger.info(e.from.id());
             Logger::logger.info(e.target.id());
         });
-        Event::processor.registerEvent<MemberJoinRequestEvent>([](MemberJoinRequestEvent e) {
+        Event::processor.registerEvent(MiraiCPEvent::EventType::MemberJoinRequestEvent, [](json j) {
+            MemberJoinRequestEvent e(j);
             e.accept();
         });
-        Event::processor.registerEvent<BotLeaveEvent>([](const BotLeaveEvent &e) {
+        Event::processor.registerEvent(MiraiCPEvent::EventType::BotLeaveEvent, [](json j) {
+            BotLeaveEvent e(j);
             Logger::logger.info(e.groupid, "Leave", "");
         });
     }

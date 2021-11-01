@@ -178,7 +178,8 @@ namespace MiraiCP {
     }
     ExceptionBroadcasting::ExceptionBroadcasting(MiraiCPException *ex) : e(ex) {}
     ExceptionBroadcasting::~ExceptionBroadcasting() {
-        Event::processor.broadcast<MiraiCPExceptionEvent>(MiraiCPExceptionEvent(e));
+        // TODO
+        //Event::processor.broadcast<MiraiCPExceptionEvent>(MiraiCPExceptionEvent(e));
     }
 
     void MessageSource::recall(JNIEnv *env) const {
@@ -921,126 +922,10 @@ Event(JNIEnv *env, jobject, jstring content) {
     }
     ThreadManager::getThread()->stack.push(__FILE__, __LINE__, "source: " + tmp);
     try {
-        switch ((int) j["type"]) {
-            case 1: {
-                //GroupMessage
-                Event::processor.broadcast<GroupMessageEvent>(
-                        GroupMessageEvent(j["group"]["botid"],
-                                          Group(Group::deserializationFromJson(j["group"])),
-                                          Member(Member::deserializationFromJson(j["member"])),
-                                          MessageChain::deserializationFromMiraiCode(j["message"].get<std::string>())
-                                                  .plus(MessageSource::deserializeFromString(j["source"]))));
-                break;
-            }
-            case 2: {
-                //私聊消息
-                Event::processor.broadcast<PrivateMessageEvent>(
-                        PrivateMessageEvent(j["friend"]["botid"],
-                                            Friend(Friend::deserializationFromJson(j["friend"])),
-                                            MessageChain::deserializationFromMiraiCode(j["message"])
-                                                    .plus(MessageSource::deserializeFromString(j["source"]))));
-                break;
-            }
-            case 3:
-                //群聊邀请
-                Event::processor.broadcast<GroupInviteEvent>(
-                        GroupInviteEvent(
-                                j["source"]["botid"],
-                                j["request"],
-                                j["source"]["inviternick"],
-                                j["source"]["inviterid"],
-                                j["source"]["groupname"],
-                                j["source"]["groupid"]));
-                break;
-            case 4:
-                //好友
-                Event::processor.broadcast<NewFriendRequestEvent>(
-                        NewFriendRequestEvent(
-                                j["source"]["botid"],
-                                j["request"],
-                                j["source"]["fromid"],
-                                j["source"]["fromgroupid"],
-                                j["source"]["fromnick"],
-                                j["source"]["message"]));
-                break;
-            case 5:
-                //新成员加入
-                Event::processor.broadcast<MemberJoinEvent>(
-                        MemberJoinEvent(
-                                j["group"]["botid"],
-                                j["jointype"],
-                                Member(Member::deserializationFromJson(j["member"])),
-                                Group(Group::deserializationFromJson(j["group"])),
-                                j["inviterid"]));
-                break;
-            case 6:
-                //群成员退出
-                Event::processor.broadcast<MemberLeaveEvent>(MemberLeaveEvent(
-                        j["group"]["botid"],
-                        j["leavetype"],
-                        j["memberid"],
-                        Group(Group::deserializationFromJson(j["group"])),
-                        j["operatorid"]));
-                break;
-            case 7:
-                Event::processor.broadcast<RecallEvent>(RecallEvent(
-                        j["botid"],
-                        j["etype"],
-                        j["time"],
-                        j["authorid"],
-                        j["operatorid"],
-                        j["ids"],
-                        j["internalids"],
-                        j["groupid"]));
-                break;
-            case 9:
-                Event::processor.broadcast<BotJoinGroupEvent>(BotJoinGroupEvent(
-                        j["group"]["botid"],
-                        j["etype"],
-                        Group(Group::deserializationFromJson(j["group"])),
-                        j["inviterid"]));
-                break;
-            case 10:
-                Event::processor.broadcast<GroupTempMessageEvent>(GroupTempMessageEvent(
-                        j["group"]["botid"],
-                        Group(Group::deserializationFromJson(j["group"])),
-                        Member(Member::deserializationFromJson(j["member"])),
-                        MessageChain::deserializationFromMiraiCode(j["message"])
-                                .plus(MessageSource::deserializeFromString(j["source"]))));
-                break;
-            case 11:
-                Event::processor.broadcast<BotOnlineEvent>(BotOnlineEvent(j["botid"]));
-                break;
-            case 12:
-                Event::processor.broadcast<TimeOutEvent>(TimeOutEvent(j["msg"]));
-                break;
-            case 13:
-                Event::processor.broadcast<NudgeEvent>(NudgeEvent(Contact::deserializationFromJson(j["from"]),
-                                                                  Contact::deserializationFromJson(j["target"]),
-                                                                  j["botid"]));
-                break;
-            case 14:
-                Event::processor.broadcast(BotLeaveEvent(j["groupid"], j["botid"]));
-                break;
-            case 15: {
-                std::optional<Group> a;
-                std::optional<Member> b;
-                Contact temp = Contact::deserializationFromJson(j["group"]);
-                if (temp.id() == 0)
-                    a = std::nullopt;
-                else
-                    a = Group(temp);
-                temp = Contact::deserializationFromJson(j["inviter"]);
-                if (temp.id() == 0)
-                    b = std::nullopt;
-                else
-                    b = Member(temp);
-                Event::processor.broadcast(MemberJoinRequestEvent(a, b, temp.botid(), j["requestData"]));
-                break;
-            }
-            default:
-                throw APIException("Unreachable code");
-        }
+        if ((int)j["type"] <= 15) {
+            Event::processor.broadcast(j);
+        } else 
+            throw APIException("Unreachable code");
     } catch (json::type_error &e) {
         Logger::logger.error("json格式化异常,位置C-Handle");
         Logger::logger.error(e.what(), false);
