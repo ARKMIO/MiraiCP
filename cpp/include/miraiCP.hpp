@@ -3294,6 +3294,7 @@ namespace MiraiCP {
             std::function<void(json& j)> func;
             explicit Node(MiraiCPEvent::EventType event_type, std::function<void(json& j)> f) : event_type(event_type), func(std::move(f)) {}
             void run(json& j) const {
+		if (enable)
                 func(j);
             }
         };
